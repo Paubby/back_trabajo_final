@@ -9,7 +9,7 @@ import { Pool } from 'pg';
 // });
 
 const connectionString = 
-'postgresql://blackjack_final_proyecto_user:PeLRKoDlW6JsIDbYSMImizKcXfEnVOnm@dpg-cum6509opnds73d845t0-a.frankfurt-postgres.render.com/blackjack_final_proyecto'
+'postgresql://blackjack_final_proyecto_user:PeLRKoDlW6JsIDbYSMImizKcXfEnVOnm@dpg-cum6509opnds73d845t0-a/blackjack_final_proyecto'
 
 const pool = new Pool({
     connectionString,

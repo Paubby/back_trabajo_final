@@ -39,7 +39,7 @@ app.get('/jugadores/:email', jsonParser, async (req, res) => {
 app.post('/crear', jsonParser, async (req, res) => {
 
     console.log(`Petición recibida al endpoint POST /user. 
-        Body: ${JSON.stringify(req.body)}`);
+        Body: ${JSON.stringify(req.body.email)}`);
 
     try {
         
@@ -63,38 +63,77 @@ app.post('/crear', jsonParser, async (req, res) => {
 });
 
 
-
 app.post('/dinero', jsonParser, async (req, res) => {
-
     console.log(`Petición recibida al endpoint POST /dinero/:${req.body.email}.`);
-
     try {
-        let query_suma = `SELECT (dinero) FROM jugadores where email = ${req.body.email}`
-        query_suma = req.body.money + query_suma
-        let query_update = `UPDATE jugadores SET dinero = ${req.body.money} WHERE email = '${req.body.email}'`; 
-
+        // Obtener el dinero actual del jugador
+        let query_suma = `SELECT dinero FROM jugadores WHERE email = '${req.body.email}'`;
         let db_response_suma = await db.query(query_suma);
+
+        if (db_response_suma.rows.length === 0) {
+            console.log("El registro NO ha sido encontrado");
+            return res.status(404).json("El registro NO ha sido encontrado");
+        }
+
+        let dinero_actual = parseFloat(db_response_suma.rows[0].dinero);
+        let dinero_nuevo = parseFloat(req.body.money);
+
+        // Sumar el dinero actual con el nuevo dinero
+        let dinero_total = dinero_actual + dinero_nuevo;
+
+        // Actualizar el dinero en la base de datos
+        let query_update = `UPDATE jugadores SET dinero = ${dinero_total} WHERE email = '${req.body.email}'`;
         let db_response_update = await db.query(query_update);
-        // let db_response = await db.query(query);
 
-
-        console.log(req.body.money)
+        console.log(req.body.money);
         console.log(db_response_update.rowCount);
         console.log(db_response_suma);
 
-        if(db_response_update.rows.length > 0){
-            console.log(`el usuario ${req.params.email}, tiene ahora ${req.params.money}`)
-            res.json(query_suma);
+        if (db_response_update.rowCount > 0) {
+            console.log(`El usuario ${req.body.email} tiene ahora ${dinero_total}`);
+            res.json({ dinero_total });
         } else {
-            console.log("El registro NO ha sido encontrado")
-            res.json("El registro NO ha sido encontrado")
+            console.log("El registro NO ha sido actualizado");
+            res.status(500).json("El registro NO ha sido actualizado");
         }
-    
     } catch (err) {
         console.error(err);
-        res.status(500).send('Internal Server Error, no se pudo cojer el email correctamente');
+        res.status(500).send('Internal Server Error, no se pudo procesar la solicitud');
     }
 });
+
+
+// app.post('/dinero', jsonParser, async (req, res) => {
+
+//     console.log(`Petición recibida al endpoint POST /dinero/:${req.body.email}.`);
+
+//     try {
+//         let query_suma = `SELECT (dinero) FROM jugadores where email = ${req.body.email}`
+//         query_suma = req.body.money + query_suma
+//         let query_update = `UPDATE jugadores SET dinero = ${req.body.money} WHERE email = '${req.body.email}'`; 
+
+//         let db_response_suma = await db.query(query_suma);
+//         let db_response_update = await db.query(query_update);
+//         // let db_response = await db.query(query);
+
+
+//         console.log(req.body.money)
+//         console.log(db_response_update.rowCount);
+//         console.log(db_response_suma);
+
+//         if(db_response_update.rows.length > 0){
+//             console.log(`el usuario ${req.params.email}, tiene ahora ${req.params.money}`)
+//             res.json(query_suma);
+//         } else {
+//             console.log("El registro NO ha sido encontrado")
+//             res.json("El registro NO ha sido encontrado")
+//         }
+    
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).send('Internal Server Error, no se pudo cojer el email correctamente');
+//     }
+// });
 
 
 // app.post('/dinero', jsonParser, async (req, res) => {

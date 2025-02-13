@@ -103,7 +103,7 @@ app.post('/crear', jsonParser, function (req, res) { return __awaiter(void 0, vo
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                console.log("Petici\u00F3n recibida al endpoint POST /user. \n        Body: " + JSON.stringify(req.body));
+                console.log("Petici\u00F3n recibida al endpoint POST /user. \n        Body: " + JSON.stringify(req.body.email));
                 _a.label = 1;
             case 1:
                 _a.trys.push([1, 3, , 4]);
@@ -130,7 +130,7 @@ app.post('/crear', jsonParser, function (req, res) { return __awaiter(void 0, vo
     });
 }); });
 app.post('/dinero', jsonParser, function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var query_suma, query_update, db_response_suma, db_response_update, err_3;
+    var query_suma, db_response_suma, dinero_actual, dinero_nuevo, dinero_total, query_update, db_response_update, err_3;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -138,37 +138,66 @@ app.post('/dinero', jsonParser, function (req, res) { return __awaiter(void 0, v
                 _a.label = 1;
             case 1:
                 _a.trys.push([1, 4, , 5]);
-                query_suma = "SELECT (dinero) FROM jugadores where email = " + req.body.email;
-                query_suma = req.body.money + query_suma;
-                query_update = "UPDATE jugadores SET dinero = " + req.body.money + " WHERE email = '" + req.body.email + "'";
+                query_suma = "SELECT dinero FROM jugadores WHERE email = '" + req.body.email + "'";
                 return [4 /*yield*/, db.query(query_suma)];
             case 2:
                 db_response_suma = _a.sent();
+                if (db_response_suma.rows.length === 0) {
+                    console.log("El registro NO ha sido encontrado");
+                    return [2 /*return*/, res.status(404).json("El registro NO ha sido encontrado")];
+                }
+                dinero_actual = parseFloat(db_response_suma.rows[0].dinero);
+                dinero_nuevo = parseFloat(req.body.money);
+                dinero_total = dinero_actual + dinero_nuevo;
+                query_update = "UPDATE jugadores SET dinero = " + dinero_total + " WHERE email = '" + req.body.email + "'";
                 return [4 /*yield*/, db.query(query_update)];
             case 3:
                 db_response_update = _a.sent();
-                // let db_response = await db.query(query);
                 console.log(req.body.money);
                 console.log(db_response_update.rowCount);
                 console.log(db_response_suma);
-                if (db_response_update.rows.length > 0) {
-                    console.log("el usuario " + req.params.email + ", tiene ahora " + req.params.money);
-                    res.json(query_suma);
+                if (db_response_update.rowCount > 0) {
+                    console.log("El usuario " + req.body.email + " tiene ahora " + dinero_total);
+                    res.json({ dinero_total: dinero_total });
                 }
                 else {
-                    console.log("El registro NO ha sido encontrado");
-                    res.json("El registro NO ha sido encontrado");
+                    console.log("El registro NO ha sido actualizado");
+                    res.status(500).json("El registro NO ha sido actualizado");
                 }
                 return [3 /*break*/, 5];
             case 4:
                 err_3 = _a.sent();
                 console.error(err_3);
-                res.status(500).send('Internal Server Error, no se pudo cojer el email correctamente');
+                res.status(500).send('Internal Server Error, no se pudo procesar la solicitud');
                 return [3 /*break*/, 5];
             case 5: return [2 /*return*/];
         }
     });
 }); });
+// app.post('/dinero', jsonParser, async (req, res) => {
+//     console.log(`Petición recibida al endpoint POST /dinero/:${req.body.email}.`);
+//     try {
+//         let query_suma = `SELECT (dinero) FROM jugadores where email = ${req.body.email}`
+//         query_suma = req.body.money + query_suma
+//         let query_update = `UPDATE jugadores SET dinero = ${req.body.money} WHERE email = '${req.body.email}'`; 
+//         let db_response_suma = await db.query(query_suma);
+//         let db_response_update = await db.query(query_update);
+//         // let db_response = await db.query(query);
+//         console.log(req.body.money)
+//         console.log(db_response_update.rowCount);
+//         console.log(db_response_suma);
+//         if(db_response_update.rows.length > 0){
+//             console.log(`el usuario ${req.params.email}, tiene ahora ${req.params.money}`)
+//             res.json(query_suma);
+//         } else {
+//             console.log("El registro NO ha sido encontrado")
+//             res.json("El registro NO ha sido encontrado")
+//         }
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).send('Internal Server Error, no se pudo cojer el email correctamente');
+//     }
+// });
 // app.post('/dinero', jsonParser, async (req, res) => {
 //     console.log(`Petición recibida al endpoint POST /dinero para el email ${req.body.email}.`);
 //     try {
