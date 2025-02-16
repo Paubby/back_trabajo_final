@@ -10,7 +10,7 @@ import * as db from './db-connection';
 
 app.get('/jugadores/:email', jsonParser, async (req, res) => {
 
-    console.log(`Petición recibida al endpoint GET /user. 
+    console.log(`Petición recibida al endpoint GET /jugadores/:${req.params.email}. 
         Body: ${JSON.stringify(req.body)}`);
 
     try {
@@ -38,7 +38,7 @@ app.get('/jugadores/:email', jsonParser, async (req, res) => {
 
 app.post('/crear', jsonParser, async (req, res) => {
 
-    console.log(`Petición recibida al endpoint POST /user. 
+    console.log(`Petición recibida al endpoint POST /crear. 
         Body: ${JSON.stringify(req.body.email)}`);
 
     try {
@@ -70,7 +70,7 @@ app.post('/dinero', jsonParser, async (req, res) => {
         let query_suma = `SELECT dinero FROM jugadores WHERE email = '${req.body.email}'`;
         let db_response_suma = await db.query(query_suma);
 
-        if (db_response_suma.rows.length === 0) {
+        if (db_response_suma.rows.length == 0) {
             console.log("El registro NO ha sido encontrado");
             return res.status(404).json("El registro NO ha sido encontrado");
         }
@@ -78,10 +78,10 @@ app.post('/dinero', jsonParser, async (req, res) => {
         let dinero_actual = parseFloat(db_response_suma.rows[0].dinero);
         let dinero_nuevo = parseFloat(req.body.money);
 
-        // Sumar el dinero actual con el nuevo dinero
+        // Sumar del dinero
         let dinero_total = dinero_actual + dinero_nuevo;
 
-        // Actualizar el dinero en la base de datos
+        // UPDATE al dinero total
         let query_update = `UPDATE jugadores SET dinero = ${dinero_total} WHERE email = '${req.body.email}'`;
         let db_response_update = await db.query(query_update);
 
@@ -99,6 +99,33 @@ app.post('/dinero', jsonParser, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Internal Server Error, no se pudo procesar la solicitud');
+    }
+});
+
+
+// Esto va ha ser un order by, con la parte DINERO para el RANKING
+
+app.get('/ordenar', async (req, res) => {
+    console.log(`Petición recibida al endpoint GET /ordenar.`);
+
+    try {
+        let query = `SELECT * FROM jugadores ORDER BY dinero DESC LIMIT 3;`; 
+        let db_response = await db.query(query);
+
+        console.log(`Usuarios encontrados: ${db_response.rows.length}`);
+        console.log(db_response.rows);
+
+        if (db_response.rows.length > 0) {
+            res.json(db_response.rows);
+            console.log(db_response)
+        } else {
+            console.log("No se encontraron registros.");
+            res.json("No se encontraron registros.");
+        }
+    
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error interno del servidor, no se pudo obtener los datos.');
     }
 });
 
@@ -194,5 +221,7 @@ const port = process.env.PORT || 3000;
 
 app.listen(port, () => console.log(`App listening on PORT ${port}
     - GET: /jugador/:email
-    - GET: /dinero
-    - POST: /crear`));
+    - GET: 
+    - POST: /crear
+    - POST: /dinero
+    `));
