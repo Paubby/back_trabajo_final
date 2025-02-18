@@ -129,99 +129,51 @@ app.get('/ordenar', async (req, res) => {
     }
 });
 
-
-// app.post('/dinero', jsonParser, async (req, res) => {
-
-//     console.log(`Petición recibida al endpoint POST /dinero/:${req.body.email}.`);
-
-//     try {
-//         let query_suma = `SELECT (dinero) FROM jugadores where email = ${req.body.email}`
-//         query_suma = req.body.money + query_suma
-//         let query_update = `UPDATE jugadores SET dinero = ${req.body.money} WHERE email = '${req.body.email}'`; 
-
-//         let db_response_suma = await db.query(query_suma);
-//         let db_response_update = await db.query(query_update);
-//         // let db_response = await db.query(query);
-
-
-//         console.log(req.body.money)
-//         console.log(db_response_update.rowCount);
-//         console.log(db_response_suma);
-
-//         if(db_response_update.rows.length > 0){
-//             console.log(`el usuario ${req.params.email}, tiene ahora ${req.params.money}`)
-//             res.json(query_suma);
-//         } else {
-//             console.log("El registro NO ha sido encontrado")
-//             res.json("El registro NO ha sido encontrado")
-//         }
     
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Internal Server Error, no se pudo cojer el email correctamente');
-//     }
-// });
+app.post('/perder', jsonParser, async (req, res) => {
 
+    console.log(`Petición recibida al endpoint POST /perder. 
+        Body: ${JSON.stringify(req.body.email)}`);
 
-// app.post('/dinero', jsonParser, async (req, res) => {
-//     console.log(`Petición recibida al endpoint POST /dinero para el email ${req.body.email}.`);
+        try {
+            // Obtener el dinero actual del jugador
+            let query = `SELECT dinero FROM jugadores WHERE email = '${req.body.email}'`;
+            let db_response = await db.query(query);
+    
+            if (db_response.rows.length == 0) {
+                console.log("El registro NO ha sido encontrado");
+                return res.status(404).json("El registro NO ha sido encontrado");
+            }
 
-//     try {
-//         // Consulta para obtener el dinero actual
-//         let querySum = 'SELECT dinero FROM jugadores WHERE email = $1';
-//         let sumResult = await db.query(querySum, [req.body.email]);
+            let dinero_actual = parseFloat(db_response.rows[0].dinero);
 
-//         if (sumResult.rows.length === 0) {
-//             return res.status(404).json({ message: "El registro NO ha sido encontrado" });
-//         }
-
-//         let currentMoney = sumResult.rows[0].dinero;
-//         let newMoney = currentMoney + req.body.money;
-
-//         // Consulta para actualizar el dinero
-//         let queryUpdate = 'UPDATE jugadores SET dinero = $1 WHERE email = $2';
-//         let updateResult = await db.query(queryUpdate, [newMoney, req.body.email]);
-
-//         if (updateResult.rowCount > 0) {
-//             console.log(`El usuario ${req.body.email} tiene ahora ${newMoney} de dinero.`);
-//             res.json({ message: "Dinero actualizado correctamente", newMoney });
-//         } else {
-//             res.status(404).json({ message: "El registro NO ha sido encontrado" });
-//         }
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Internal Server Error, no se pudo procesar la solicitud');
-//     }
-// });
-
-
-
-// app.post('/crear' , jsonParser , async (req, res) => {
-//     console.log("end point crear" + req.body)
-//     try{
-
-//         let query = `INSERT INTO jugadores (email, nombre)
-//             values ('${req.body.email}', '${req.body.nombre}'`;
-//         let db_response = await db.query(query)
-
-//         console.log(db_response)
-
-//         if(db_response.rowCount == 1){
-//             res.json("Todo ha salido bien")
-//         } else{
-//             res.json("el registro no ha sido creado ")
-//         }
-//     } catch (err) {
-//         console.log(err)
-//         res.status(500).send('internal Server Error')
-//     }
-// });
+  
+          let query_perder = `UPDATE jugadores SET dinero = ${dinero_actual} WHERE email = '${req.body.email}';`; 
+          let db_response_perder = await db.query(query_perder);
+  
+          console.log(`Usuarios encontrados: ${db_response_perder.rows.length}`);
+          console.log(db_response_perder.rows);
+  
+          if (db_response_perder.rows.length > 0) {
+              res.json(db_response_perder.rows);
+              console.log(db_response_perder)
+          } else {
+              console.log("No se encontraron registros.");
+              res.json("No se encontraron registros.");
+          }
+      
+      } catch (err) {
+          console.error(err);
+          res.status(500).send('Error interno del servidor, no se pudo obtener los datos.');
+      }
+});
 
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => console.log(`App listening on PORT ${port}
     - GET: /jugador/:email
-    - GET: 
     - POST: /crear
     - POST: /dinero
+    - GET: /ordenar
+    - POST: /perder
     `));
